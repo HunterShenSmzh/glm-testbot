@@ -145,32 +145,31 @@ export async function apply(ctx, config: Config) {
       }
     });
 
-  const cmd1 = ctx
-    .command(
-      "glmmtg <text:text>",
-      "输入你想画的画面，发送给ChatGLM，让ChatGLM来帮你写tag"
-    )
-    .action(async ({ session }, text) => {
-      const apiAddress = "服务器地址" + "chatglm?msg=";
-      const defaultText =
-        "用尽可能多的英文标签详细的描述一幅画面，用碎片化的单词标签而不是句子去描述这幅画，描述词尽量丰富，每个单词之间用逗号分隔，例如在描述白发猫娘的时候，你应该用：white hair，cat girl，cat ears，cute，girl，beautiful，lovely等英文标签词汇。你现在要描述的是：";
-      const userText = defaultText + text;
-      const session_id = [
-        "&source=blockly_public",
-        "&usrid=|channel_id=",
-        session.channelId,
-        "|user_id=",
-        session.userId,
-        "|chat_id=",
-        chat_id,
-      ];
-      const response = await ctx.http.get(apiAddress + userText + session_id);
-      if (config.send_glmmtg_response) {
-        await session.send(`${config.prefix} ${response}`);
-      }
-      await session.execute(`${config.prefix} "${response}"`);
-      await ctx.http.get(apiAddress + "chatglm?msg=clear" + session_id, {
-        responseType: "text",
-      });
+      const cmd1 = ctx
+        .command("glmmtg <text:text>", "输入你想画的画面，发送给ChatGLM，让ChatGLM来帮你写tag")
+        .usage(`请确保当前聊天环境存在rryth或novelai插件
+       使用例子：glmmtg 阳光沙滩`)
+        .action(async ({ session }, text) => {
+        const apiAddress = config.myServerUrl + "chatglm?msg=";
+            const defaultText = "Use as many English tags as possible to describe a picture in detail. Use fragmentation word tags instead of sentences to describe the picture. Use as many descriptive words as possible, and separate each word with a comma. For example, when describing white haired cat, you should use English tag words such as white hair, cat girl, cat ears, cut, girl, beautiful, and happy. What you need to describe now is : ";
+        const userText = defaultText + text;
+        const session_id = [
+            "&source=blockly_public",
+            "&usrid=|channel_id=",
+            session.channelId,
+            "|user_id=",
+            session.userId,
+            "|chat_id=",
+            chat_id,
+        ];
+            const response = await ctx.http.get(apiAddress + userText + session_id);
+            const responseWithSpaces = response.replace(/[\u4e00-\u9fa5]+/g, ' ');
+        if (config.send_glmmtg_response) {
+            await session.send(`${config.prefix} ${responseWithSpaces}`);
+        }
+            await session.execute(`${config.prefix} "${responseWithSpaces}"`);
+        await ctx.http.get(apiAddress + "clear" + session_id, {
+            responseType: "text",
+        });
     });
 }
